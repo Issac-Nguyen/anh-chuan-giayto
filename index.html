@@ -191,6 +191,30 @@
 
   /* &#9315; before/after */
   #baCap{margin-top:8px}
+
+  /* B: AI x&#7917; l&#253; n&#7873;n */
+  #aiOpts{margin-top:4px}
+  .bgc{padding:7px 8px!important;font-size:11px!important}
+  .bgc[data-c="#ffffff"]{}
+  #aiMsg{margin-top:9px}
+  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--blue-ink);
+    border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* C: b&#7843;ng ki&#7875;m */
+  .checks{list-style:none;padding:0;margin:0;font-size:12.5px}
+  .checks li{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);color:var(--ink-soft)}
+  .checks li:first-child{border-top:0}
+  .checks .ic{flex:none;width:17px;height:17px;border-radius:50%;display:inline-flex;align-items:center;
+    justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-top:1px;background:var(--ink-soft)}
+  .checks li.ok .ic{background:var(--pass)} .checks li.warn .ic{background:var(--amber)} .checks li.no .ic{background:var(--warn)}
+  .checks li.ok{color:var(--ink)}
+  .checks .ct{line-height:1.4}
+  .checks .ct small{display:block;color:var(--ink-soft);font-size:11px;margin-top:1px}
+  #passLbl.ok{color:var(--pass)} #passLbl.no{color:var(--warn)}
+  .gate{font-family:var(--mono);font-size:11px;line-height:1.5;border-radius:8px;padding:9px 10px;margin-top:10px;
+    background:rgba(200,62,62,.06);border:1px solid rgba(200,62,62,.3);color:#8f2a2a;display:none}
+  .gate.show{display:block}
 </style>
 </head>
 <body>
@@ -288,19 +312,36 @@
     </div>
   </div>
 
-  <!-- CONTROLS -->
+  <!-- CONTROLS: x&#7917; l&#253; n&#7873;n -->
   <div class="panel">
     <p class="lbl">X&#7917; l&#253; n&#7873;n</p>
-    <div class="row">
-      <div class="t">L&#224;m n&#7873;n tr&#7855;ng
-        <small>ho&#7841;t &#273;&#7897;ng t&#7889;t nh&#7845;t khi ch&#7909;p tr&#432;&#7899;c t&#432;&#7901;ng ph&#7859;ng, s&#225;ng &#273;&#7873;u</small>
-      </div>
-      <label class="sw"><input type="checkbox" id="bgTog"><i></i></label>
+    <div class="seg" id="bgMode">
+      <button data-m="none" aria-pressed="true">Gi&#7919; nguy&#234;n</button>
+      <button data-m="fast">N&#7873;n tr&#7855;ng nhanh</button>
+      <button data-m="ai">Xo&#225; ph&#244;ng AI</button>
     </div>
     <div class="row" id="tolRow" style="display:none">
       <div class="t">&#272;&#7897; nh&#7841;y t&#225;ch n&#7873;n <small id="tolVal">trung b&#236;nh</small></div>
       <input type="range" id="tol" min="20" max="140" value="72">
     </div>
+    <div id="aiOpts" style="display:none">
+      <div class="row">
+        <div class="t">M&#224;u n&#7873;n thay th&#7871;<small>xo&#225; ph&#244;ng xong l&#7845;p m&#224;u n&#224;y</small></div>
+        <div class="seg" style="width:auto;flex:none;margin:0">
+          <button class="bgc" data-c="#ffffff" aria-pressed="true">Tr&#7855;ng</button>
+          <button class="bgc" data-c="#eef1f4">X&#225;m</button>
+          <button class="bgc" data-c="#dbe7f5">Xanh</button>
+        </div>
+      </div>
+      <p class="msg" id="aiMsg" style="display:none"></p>
+    </div>
+  </div>
+
+  <!-- C: ki&#7875;m chu&#7849;n -->
+  <div class="panel">
+    <p class="lbl">Ki&#7875;m chu&#7849;n <span id="passLbl" style="font-family:var(--mono)"></span></p>
+    <ul class="checks" id="checks"><li><span class="ic">&#183;</span><span class="ct">T&#7843;i &#7843;nh &#273;&#7875; b&#7855;t &#273;&#7847;u ki&#7875;m.</span></li></ul>
+    <div class="gate" id="gateNote"></div>
   </div>
 
   <!-- EXPORT -->
@@ -369,6 +410,12 @@ let sx=0, sy=0, sw=0, sh=0;      // crop trong to\u1ea1 \u0111\u1ed9 pixel \u1ea
 let stream=null;
 let faceBox=null;                // bbox m\u1eb7t (px \u1ea3nh g\u1ed1c) n\u1ebfu FaceDetector nh\u1eadn ra
 let alignOk=false, exported=false, stepTouched1=false;  // tr\u1ea1ng th\u00e1i cho badge b\u01b0\u1edbc
+// B: x\u1eed l\u00fd n\u1ec1n
+let bgMode="none";               // none | fast | ai
+let aiBgColor="#ffffff";
+let seg=null, lastMask=null, procCanvas=null, procReady=false, segBusy=false;
+// C: ki\u1ec3m chu\u1ea9n
+let critPass=false;              // c\u00e1c m\u1ee5c quan tr\u1ecdng \u0111\u1ec1u \u0111\u1ea1t?
 const view=$("#view"), fr=$("#frame"), ctx=view.getContext("2d");
 let CSSW=0, CSSH=0, DPR=Math.min(window.devicePixelRatio||1, 2.5);
 
@@ -392,9 +439,11 @@ function renderSpec(){
   $("#docHint").textContent = doc.id;
 }
 function toggleUSNote(){
-  const on = doc.us && $("#bgTog").checked;
+  const on = doc.us && bgMode!=="none";
   $("#usNote").classList.toggle("show", on);
 }
+// ngu\u1ed3n v\u1ebd hi\u1ec7n h\u00e0nh: \u1ea3nh \u0111\u00e3 xo\u00e1 ph\u00f4ng (AI) n\u1ebfu s\u1eb5n s\u00e0ng, ng\u01b0\u1ee3c l\u1ea1i \u1ea3nh g\u1ed1c
+function activeSrc(){ return (bgMode==="ai" && procReady && procCanvas) ? procCanvas : img; }
 
 /* ---- Guide theo t\u1ec9 l\u1ec7 chi\u1ec1u cao khung ---- */
 function guides(){
@@ -442,12 +491,13 @@ async function tryAutoFit(report){
     const b=faces[0].boundingBox;
     faceBox={x:b.x, y:b.y, w:b.width, h:b.height};   // l\u01b0u \u0111\u1ec3 coaching \u2462
     const g=guides();
-    const headPx=b.height*1.5;
-    const bandFrac=g.chin-g.crown;
-    sh=headPx/bandFrac; sw=sh*(doc.w/doc.h);
-    const faceCx=b.x+b.width/2, faceTop=b.y-b.height*0.32;
+    // d\u00f9ng C\u00d9NG m\u00f4 h\u00ecnh \u0111\u1ea7u nh\u01b0 coachAlign(): \u0111\u1ec9nh \u0111\u1ea7u = m\u1eb7t - 0.35h, c\u1eb1m = m\u1eb7t + 0.95h
+    const headTop=b.y - b.height*0.35, chinY=b.y + b.height*0.95;
+    const headSpan=chinY - headTop;                  // = 1.30*b.height
+    sh=headSpan/(g.chin - g.crown); sw=sh*(doc.w/doc.h);
+    const faceCx=b.x + b.width/2;
     sx=faceCx - sw/2;
-    sy=faceTop - g.crown*sh;
+    sy=headTop - g.crown*sh;
     clampCrop(); draw(); updateReadout(); if(report) status("\u0111\u00e3 c\u0103n t\u1ef1 \u0111\u1ed9ng \u2713", false);
   }catch(e){ if(report) status("Kh\u00f4ng c\u0103n t\u1ef1 \u0111\u1ed9ng \u0111\u01b0\u1ee3c \u2014 c\u0103n tay gi\u00fap nh\u00e9.",true); }
 }
@@ -466,11 +516,12 @@ function draw(){
   ctx.clearRect(0,0,CSSW,CSSH);
   if(!img){ renderCoach(null); updateSteps(); return; }
   $("#empty").style.display="none";
-  ctx.drawImage(img, sx,sy,sw,sh, 0,0,CSSW,CSSH);
+  ctx.drawImage(activeSrc(), sx,sy,sw,sh, 0,0,CSSW,CSSH);
   drawGuides();
   $("#zoomLbl").textContent = "\u00d7"+(img.width/sw).toFixed(2);
   renderCoach(coachAlign());   // \u2462 c\u1eadp nh\u1eadt chip coaching
   updateSteps();               // \u2461 c\u1eadp nh\u1eadt badge b\u01b0\u1edbc
+  updateChecks();              // C: b\u1ea3ng ki\u1ec3m
 }
 
 /* ---- \u2461 Badge b\u01b0\u1edbc: \u0111\u1ecdc state, \u0111\u1ed5i x\u00e1m/xanh ---- */
@@ -504,6 +555,75 @@ function renderCoach(c){
   alignOk = c.state==='ok';
   el.className="coach show "+(c.state==='ok'?'ok':c.state==='hint'?'hint2':'');
   el.textContent=c.msg;
+}
+
+/* ---- C: B\u1ea3ng ki\u1ec3m \u0111\u1eadu/r\u1edbt ---- */
+function setExport(on){ $("#btnPhoto").disabled=!on; $("#btnSheet").disabled=!on; }
+function cropSample(n){
+  const cv=document.createElement("canvas"); cv.width=n; cv.height=Math.round(n*(doc.h/doc.w));
+  const c=cv.getContext("2d"); c.drawImage(activeSrc(), sx,sy,sw,sh, 0,0,cv.width,cv.height);
+  return {data:c.getImageData(0,0,cv.width,cv.height).data, w:cv.width, h:cv.height};
+}
+function borderVar(smp){
+  const {data:d,w,h}=smp; const vals=[];
+  const push=(x,y)=>{const i=(y*w+x)*4; vals.push([d[i],d[i+1],d[i+2]]);};
+  for(let x=0;x<w;x++){ push(x,0); push(x,1); }
+  for(let y=0;y<Math.max(1,Math.floor(h*0.25));y++){ push(0,y); push(w-1,y); }
+  const m=[0,1,2].map(k=>vals.reduce((s,v)=>s+v[k],0)/vals.length);
+  let va=0; vals.forEach(v=>{ va+=Math.hypot(v[0]-m[0],v[1]-m[1],v[2]-m[2]); });
+  return va/vals.length;
+}
+function centerLuma(smp){
+  const {data:d,w,h}=smp; let s=0,n=0;
+  for(let y=Math.floor(h*0.30);y<Math.floor(h*0.70);y++)
+    for(let x=Math.floor(w*0.30);x<Math.floor(w*0.70);x++){
+      const i=(y*w+x)*4; s+=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]; n++;
+    }
+  return n?s/n:128;
+}
+function updateChecks(){
+  const el=$("#checks"), lbl=$("#passLbl"), gate=$("#gateNote");
+  if(!img){ el.innerHTML='<li><span class="ic">\u00b7</span><span class="ct">T\u1ea3i \u1ea3nh \u0111\u1ec3 b\u1eaft \u0111\u1ea7u ki\u1ec3m.</span></li>';
+    lbl.textContent=""; lbl.className=""; critPass=false; setExport(false); gate.classList.remove("show"); return; }
+  const g=guides();
+  const outW=Math.round(doc.w/MM*DPI);
+  const items=[];
+  // 1. \u0111\u1ee7 \u0111i\u1ec3m \u1ea3nh (quan tr\u1ecdng)
+  const need=(doc.pxMin?doc.pxMin:outW)*0.85;
+  items.push({crit:true, ok: sw>=need, t:"\u0110\u1ee7 \u0111\u1ed9 n\u00e9t ngu\u1ed3n", s: Math.round(sw)+"px v\u00f9ng c\u1eaft (c\u1ea7n ~"+Math.round(need)+"px)"});
+  // 2/3. c\u1ee1 \u0111\u1ea7u + c\u0103n gi\u1eefa (quan tr\u1ecdng, c\u1ea7n nh\u1eadn ra m\u1eb7t)
+  if(faceBox){
+    const headTop=faceBox.y-faceBox.h*0.35, chinY=faceBox.y+faceBox.h*0.95;
+    const fTop=(headTop-sy)/sh, fChin=(chinY-sy)/sh, fcx=(faceBox.x+faceBox.w/2 - sx)/sw;
+    const tol=0.05;
+    items.push({crit:true, ok: Math.abs(fTop-g.crown)<tol && Math.abs(fChin-g.chin)<tol,
+      t:"C\u1ee1 \u0111\u1ea7u \u0111\u00fang d\u1ea3i", s: doc.head[0]+"\u2013"+doc.head[1]+"mm \u2014 \u0111\u1ec9nh \u0111\u1ea7u & c\u1eb1m ch\u1ea1m 2 v\u1ea1ch"});
+    items.push({crit:true, ok: Math.abs(fcx-0.5)<0.08, t:"\u0110\u1ea7u c\u0103n gi\u1eefa", s:"tr\u1ee5c d\u1ecdc qua gi\u1eefa khu\u00f4n m\u1eb7t"});
+  } else {
+    items.push({crit:false, ok:null, t:"C\u1ee1 \u0111\u1ea7u / c\u0103n gi\u1eefa", s:"Kh\u00f4ng nh\u1eadn ra m\u1eb7t \u2014 c\u0103n tay theo 2 v\u1ea1ch r\u1ed3i t\u1ef1 ki\u1ec3m"});
+  }
+  // 4. n\u1ec1n \u0111\u1ec1u m\u00e0u (khuy\u1ebfn ngh\u1ecb)
+  const smp=cropSample(60);
+  const bgv=borderVar(smp);
+  items.push({crit:false, ok: bgv<18, t:"N\u1ec1n \u0111\u1ec1u m\u00e0u", s: bgv<18?"n\u1ec1n ph\u1eb3ng, \u00edt b\u00f3ng":"n\u1ec1n l\u1ed1m \u0111\u1ed1m \u2014 n\u00ean d\u00f9ng \"Xo\u00e1 ph\u00f4ng AI\""});
+  // 5. \u0111\u1ed9 s\u00e1ng (khuy\u1ebfn ngh\u1ecb)
+  const lum=centerLuma(smp);
+  items.push({crit:false, ok: lum>70 && lum<210, t:"\u0110\u1ed9 s\u00e1ng h\u1ee3p l\u00fd", s: lum<=70?"h\u01a1i t\u1ed1i":lum>=210?"h\u01a1i ch\u00e1y s\u00e1ng":"v\u1eeba, \u0111\u1ec1u"});
+
+  el.innerHTML=items.map(i=>{
+    const cls=i.ok===null?"warn":i.ok?"ok":(i.crit?"no":"warn");
+    const mark=i.ok===null?"?":i.ok?"\u2713":(i.crit?"\u2715":"!");
+    return '<li class="'+cls+'"><span class="ic">'+mark+'</span><span class="ct">'+i.t+'<small>'+i.s+'</small></span></li>';
+  }).join("");
+
+  const critFail=items.some(i=>i.crit && i.ok===false);
+  critPass=!critFail;
+  const allGood=items.every(i=>i.ok===true);
+  lbl.textContent = allGood?"\u0111\u1ea1t \u2713":critFail?"ch\u01b0a \u0111\u1ea1t":"c\u1ea7n xem";
+  lbl.className = allGood?"ok":critFail?"no":"";
+  setExport(critPass);
+  gate.classList.toggle("show", critFail);
+  gate.textContent = critFail ? "C\u00f2n m\u1ee5c quan tr\u1ecdng ch\u01b0a \u0111\u1ea1t (\u2715) \u2014 ch\u1ec9nh xong m\u1edbi xu\u1ea5t \u0111\u01b0\u1ee3c. \u0110\u00e2y l\u00e0 ki\u1ec3m theo ti\u00eau ch\u00ed k\u1ef9 thu\u1eadt, kh\u00f4ng thay quy\u1ebft \u0111\u1ecbnh c\u1ee7a c\u01a1 quan c\u1ea5p." : "";
 }
 function drawGuides(){
   const g=guides();
@@ -631,11 +751,97 @@ $("#btnStop").onclick=stopCam;
 function stopCam(){ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
   $("#cam").style.display="none"; $("#camActs").style.display="none"; $("#btnCam").disabled=false; }
 
-/* ---- N\u1ec1n tr\u1eafng ---- */
-$("#bgTog").addEventListener("change",e=>{ $("#tolRow").style.display=e.target.checked?"flex":"none"; toggleUSNote(); });
+/* ---- X\u1eed l\u00fd n\u1ec1n: ch\u1ecdn ch\u1ebf \u0111\u1ed9 ---- */
+function syncBgUI(){
+  [...$("#bgMode").children].forEach(x=>x.setAttribute("aria-pressed", x.dataset.m===bgMode));
+  $("#tolRow").style.display = bgMode==="fast" ? "flex" : "none";
+  $("#aiOpts").style.display = bgMode==="ai" ? "block" : "none";
+}
+function aiStatus(msg, ok, err){
+  const m=$("#aiMsg");
+  if(!msg){ m.style.display="none"; return; }
+  m.style.display="block"; m.className="msg show "+(err?"err":"ok");
+  m.innerHTML=(ok===null? '<span class="spin"></span>':'')+msg;
+}
+$("#bgMode").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  bgMode=b.dataset.m; syncBgUI(); toggleUSNote();
+  if(bgMode==="ai"){ runSeg(); }
+  else { procReady=false; aiStatus(""); draw(); }
+});
+document.querySelectorAll(".bgc").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".bgc").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  aiBgColor=b.dataset.c;
+  if(lastMask){ buildProc(lastMask); draw(); }   // \u0111\u1ed5i m\u00e0u: d\u00f9ng l\u1ea1i mask, kh\u00f4ng ch\u1ea1y model l\u1ea1i
+});
 $("#tol").addEventListener("input",e=>{
   const v=+e.target.value; $("#tolVal").textContent = v<55?"nh\u1eb9":v<95?"trung b\u00ecnh":"m\u1ea1nh";
 });
+
+/* ---- AI t\u00e1ch n\u1ec1n (MediaPipe Selfie Segmentation, CDN) ---- */
+const SEG_BASE="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/";
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    if([...document.scripts].some(s=>s.src===src)) return res();
+    const s=document.createElement("script"); s.src=src;
+    s.onload=()=>res(); s.onerror=()=>rej(new Error("script"));
+    document.head.appendChild(s);
+  });
+}
+async function ensureSeg(){
+  if(seg) return seg;
+  await loadScript(SEG_BASE+"selfie_segmentation.js");
+  seg=new SelfieSegmentation({locateFile:f=>SEG_BASE+f});
+  seg.setOptions({modelSelection:1});
+  return seg;
+}
+async function runSeg(){
+  if(!img){ return; }
+  segBusy=true; procReady=false; aiStatus("\u0110ang t\u1ea3i & ch\u1ea1y AI t\u00e1ch n\u1ec1n\u2026", null);
+  try{
+    const s=await ensureSeg();
+    const r=await new Promise((res,rej)=>{
+      s.onResults(res);
+      const t=setTimeout(()=>rej(new Error("timeout")), 20000);
+      Promise.resolve(s.send({image:img})).then(()=>clearTimeout(t), e=>{clearTimeout(t);rej(e);});
+    });
+    lastMask=r.segmentationMask;
+    buildProc(lastMask);
+    procReady=true; aiStatus("\u2713 \u0110\u00e3 xo\u00e1 ph\u00f4ng \u2014 xem trong khung C\u0103n khu\u00f4n", false);
+  }catch(e){
+    procReady=false; lastMask=null;
+    aiStatus("Kh\u00f4ng ch\u1ea1y \u0111\u01b0\u1ee3c AI (m\u1ea1ng/thi\u1ebft b\u1ecb) \u2014 th\u1eed \"N\u1ec1n tr\u1eafng nhanh\".", false, true);
+  }
+  segBusy=false; draw();
+}
+// composite: ng\u01b0\u1eddi (mask) l\u00ean n\u1ec1n m\u00e0u aiBgColor
+function buildProc(mask){
+  if(!img) return;
+  const W=img.width, H=img.height;
+  procCanvas=document.createElement("canvas"); procCanvas.width=W; procCanvas.height=H;
+  const c=procCanvas.getContext("2d");
+  // mask -> pixel confidence
+  const mc=document.createElement("canvas"); mc.width=W; mc.height=H;
+  const mx=mc.getContext("2d"); mx.drawImage(mask,0,0,W,H);
+  const md=mx.getImageData(0,0,W,H).data;
+  // \u1ea3nh g\u1ed1c pixel
+  const oc=document.createElement("canvas"); oc.width=W; oc.height=H;
+  const ox=oc.getContext("2d"); ox.drawImage(img,0,0);
+  const od=ox.getImageData(0,0,W,H);
+  const sp=od.data;
+  // m\u00e0u n\u1ec1n
+  const bg=hexRGB(aiBgColor);
+  for(let i=0;i<sp.length;i+=4){
+    let a=md[i]/255;                                  // x\u00e1c su\u1ea5t l\u00e0 ng\u01b0\u1eddi
+    a = a<0.35 ? 0 : a>0.65 ? 1 : (a-0.35)/0.30;      // ng\u01b0\u1ee1ng + vi\u1ec1n m\u1ec1m
+    sp[i]  = sp[i]*a  + bg[0]*(1-a);
+    sp[i+1]= sp[i+1]*a+ bg[1]*(1-a);
+    sp[i+2]= sp[i+2]*a+ bg[2]*(1-a);
+    sp[i+3]=255;
+  }
+  c.putImageData(od,0,0);
+}
+function hexRGB(h){ return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
 function whitenBG(cv){
   const c=cv.getContext("2d"); const {width:W,height:H}=cv;
   const d=c.getImageData(0,0,W,H), p=d.data;
@@ -657,9 +863,8 @@ function renderCrop(outW,outH){
   const cv=document.createElement("canvas"); cv.width=outW; cv.height=outH;
   const c=cv.getContext("2d"); c.imageSmoothingQuality="high";
   c.fillStyle="#fff"; c.fillRect(0,0,outW,outH);
-  c.drawImage(img, sx,sy,sw,sh, 0,0,outW,outH);
-  if($("#bgTog").checked && !doc.us) whitenBG(cv);
-  else if($("#bgTog").checked && doc.us) whitenBG(cv); // v\u1eabn cho ph\u00e9p, note \u0111\u00e3 c\u1ea3nh b\u00e1o
+  c.drawImage(activeSrc(), sx,sy,sw,sh, 0,0,outW,outH);  // AI: proc \u0111\u00e3 c\u00f3 n\u1ec1n m\u1edbi
+  if(bgMode==="fast") whitenBG(cv);                      // n\u1ec1n tr\u1eafng nhanh \u00e1p l\u00fac xu\u1ea5t
   return cv;
 }
 function dl(cv,name){
@@ -680,7 +885,7 @@ function dlFallback(cv,name){
   }catch(e){ status("kh\u00f4ng xu\u1ea5t \u0111\u01b0\u1ee3c trong khung xem n\u00e0y \u2014 m\u1edf qua HTTPS.",true); }
 }
 
-function enableExport(){ $("#btnPhoto").disabled=false; $("#btnSheet").disabled=false; }
+function enableExport(){ updateChecks(); if(bgMode==="ai") runSeg(); }
 
 /* ---- Ch\u1ec9nh tay ---- */
 function zoomCenter(factor){ if(!img) return;
