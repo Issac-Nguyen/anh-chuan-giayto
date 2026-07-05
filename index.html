@@ -163,6 +163,34 @@
   .ab:active{transform:translateY(1px);background:#eef3f8}
   .ab.nb{font-size:15px;color:var(--blue-ink)}
   #out{width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;display:block}
+
+  /* &#9312; hero */
+  .hero{margin:4px 2px 14px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;
+    background:linear-gradient(180deg,#fff,#f4f8fb);box-shadow:var(--shadow)}
+  .hero h2{font-size:14.5px;margin:0 0 11px;font-weight:700;line-height:1.4;letter-spacing:-.01em;color:var(--ink)}
+  .hero h2 b{color:var(--blue-ink)}
+  .hero .ba{display:flex;align-items:center;gap:12px;justify-content:center}
+  .hero .ba figure{margin:0;text-align:center;flex:none}
+  .hero .ba svg{display:block}
+  .hero .ba figcaption{font-family:var(--mono);font-size:9px;color:var(--ink-soft);margin-top:5px;
+    text-transform:uppercase;letter-spacing:.07em}
+  .hero .arw2{font-size:22px;color:var(--blue-ink);flex:none;line-height:1}
+
+  /* &#9313; step badge */
+  .lbl .llft{display:flex;align-items:center;gap:8px}
+  .step .n{width:18px;height:18px;border-radius:50%;background:var(--line);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex:none;transition:.15s}
+  .step.done .n{background:var(--pass)}
+
+  /* &#9314; coaching chip */
+  .coach{margin-top:9px;font-family:var(--mono);font-size:11.5px;padding:9px 11px;border-radius:8px;
+    border:1px solid var(--line);display:none;align-items:center;gap:7px;background:var(--panel);color:var(--ink-soft);line-height:1.4}
+  .coach.show{display:flex}
+  .coach.ok{color:var(--pass);border-color:rgba(31,157,99,.4);background:rgba(31,157,99,.06)}
+  .coach.hint2{color:var(--amber);border-color:rgba(184,121,27,.4);background:rgba(184,121,27,.06)}
+
+  /* &#9315; before/after */
+  #baCap{margin-top:8px}
 </style>
 </head>
 <body>
@@ -176,16 +204,42 @@
     <div class="tag"><span class="dot"></span> X&#7917; l&#253; ngay tr&#234;n m&#225;y &#183; &#7843;nh kh&#244;ng r&#7901;i thi&#7871;t b&#7883; &#183; kh&#244;ng t&#224;i kho&#7843;n</div>
   </header>
 
+  <!-- &#9312; HERO -->
+  <div class="hero">
+    <h2>Bi&#7871;n &#7843;nh th&#432;&#7901;ng th&#224;nh <b>&#7843;nh h&#7897; chi&#7871;u/visa &#273;&#250;ng chu&#7849;n</b> &#8212; c&#7855;t &#273;&#250;ng c&#7905;, &#273;&#7847;u &#273;&#250;ng t&#7881; l&#7879;, in &#273;&#432;&#7907;c ngay.</h2>
+    <div class="ba">
+      <figure>
+        <svg width="74" height="56" viewBox="0 0 74 56" fill="none">
+          <rect x=".5" y=".5" width="73" height="55" rx="4" fill="#eef2f6" stroke="#C4D0DD"/>
+          <circle cx="29" cy="23" r="8" fill="#9fb0c2"/>
+          <path d="M16 45c0-8 6-12 13-12s13 4 13 12" fill="#9fb0c2"/>
+        </svg>
+        <figcaption>&#7843;nh th&#432;&#7901;ng</figcaption>
+      </figure>
+      <span class="arw2">&#8594;</span>
+      <figure>
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect x=".5" y=".5" width="55" height="55" rx="4" fill="#fff" stroke="#C4D0DD"/>
+          <line x1="0" y1="11" x2="56" y2="11" stroke="#0F9CB8" stroke-width="1"/>
+          <line x1="0" y1="44" x2="56" y2="44" stroke="#0F9CB8" stroke-width="1"/>
+          <circle cx="28" cy="24" r="11" fill="#7f93a8"/>
+          <path d="M12 56c0-11 7-17 16-17s16 6 16 17" fill="#7f93a8"/>
+        </svg>
+        <figcaption>&#7843;nh chu&#7849;n &#10003;</figcaption>
+      </figure>
+    </div>
+  </div>
+
   <!-- DOC PICKER -->
   <div class="panel">
-    <p class="lbl">Lo&#7841;i gi&#7845;y t&#7901; <span id="docHint">ch&#7885;n &#273;&#7883;nh d&#7841;ng</span></p>
+    <p class="lbl"><span class="llft"><span class="step" data-s="1"><span class="n">1</span></span>Lo&#7841;i gi&#7845;y t&#7901;</span> <span id="docHint">ch&#7885;n &#273;&#7883;nh d&#7841;ng</span></p>
     <div class="docs" id="docs"></div>
     <div class="spec" id="spec"></div>
   </div>
 
   <!-- SOURCE -->
   <div class="panel">
-    <p class="lbl">Ngu&#7891;n &#7843;nh</p>
+    <p class="lbl"><span class="llft"><span class="step" data-s="2"><span class="n">2</span></span>Ngu&#7891;n &#7843;nh</span></p>
     <div class="src">
       <label class="btn" for="file">T&#7843;i &#7843;nh l&#234;n</label>
       <button class="btn ghost" id="btnCam">D&#249;ng camera</button>
@@ -201,7 +255,7 @@
 
   <!-- STAGE -->
   <div class="panel">
-    <p class="lbl">C&#259;n khu&#244;n <span id="zoomLbl" style="font-family:var(--mono)">&#8212;</span></p>
+    <p class="lbl"><span class="llft"><span class="step" data-s="3"><span class="n">3</span></span>C&#259;n khu&#244;n</span> <span id="zoomLbl" style="font-family:var(--mono)">&#8212;</span></p>
     <div class="stage">
       <div class="frame" id="frame">
         <canvas id="view"></canvas>
@@ -214,6 +268,7 @@
       </div>
     </div>
     <p class="hint">K&#233;o &#273;&#7875; d&#7901;i &#183; ch&#7909;m 2 ng&#243;n &#273;&#7875; ph&#243;ng &#183; &#273;&#432;a <b>&#273;&#7881;nh &#273;&#7847;u</b> ch&#7841;m v&#7841;ch tr&#234;n, <b>c&#7857;m</b> ch&#7841;m v&#7841;ch d&#432;&#7899;i</p>
+    <div class="coach" id="coach"></div>
 
     <div class="adjust">
       <button class="ab" id="aAuto">&#8982; T&#7921; c&#259;n</button>
@@ -250,7 +305,7 @@
 
   <!-- EXPORT -->
   <div class="panel">
-    <p class="lbl">Xu&#7845;t k&#7871;t qu&#7843;</p>
+    <p class="lbl"><span class="llft"><span class="step" data-s="4"><span class="n">4</span></span>Xu&#7845;t k&#7871;t qu&#7843;</span></p>
     <div class="seg" id="sheetSize">
       <button data-w="6" data-h="4" aria-pressed="true">t&#7901; in 6&#215;4&#8243;</button>
       <button data-w="5.9" data-h="3.94">t&#7901; in 15&#215;10cm</button>
@@ -274,7 +329,12 @@
 
   <div class="panel" id="resultPanel" style="display:none">
     <p class="lbl">K&#7871;t qu&#7843; <span id="resName" style="font-family:var(--mono)"></span></p>
+    <div class="seg" id="baToggle" style="display:none">
+      <button data-b="orig">&#7842;nh g&#7889;c</button>
+      <button data-b="std" aria-pressed="true">&#7842;nh chu&#7849;n &#10003;</button>
+    </div>
     <img id="out" alt="&#7843;nh k&#7871;t qu&#7843;">
+    <p class="hint" id="baCap"></p>
     <p class="hint" style="margin-top:9px">&#128204; <b>Nh&#7845;n gi&#7919; &#7843;nh</b> &#7903; tr&#234;n &#8594; <b>L&#432;u &#7843;nh</b> (c&#225;ch ch&#7855;c ch&#7855;n nh&#7845;t tr&#234;n &#273;i&#7879;n tho&#7841;i).</p>
     <div class="acts" style="margin-top:8px">
       <button class="btn" id="btnSaveTry">Th&#7917; t&#7843;i v&#7873;</button>
@@ -307,6 +367,8 @@ const DOCS = [
 let img=null, doc=DOCS[0];
 let sx=0, sy=0, sw=0, sh=0;      // crop trong to\u1ea1 \u0111\u1ed9 pixel \u1ea3nh g\u1ed1c, t\u1ec9 l\u1ec7 = doc.w/doc.h
 let stream=null;
+let faceBox=null;                // bbox m\u1eb7t (px \u1ea3nh g\u1ed1c) n\u1ebfu FaceDetector nh\u1eadn ra
+let alignOk=false, exported=false, stepTouched1=false;  // tr\u1ea1ng th\u00e1i cho badge b\u01b0\u1edbc
 const view=$("#view"), fr=$("#frame"), ctx=view.getContext("2d");
 let CSSW=0, CSSH=0, DPR=Math.min(window.devicePixelRatio||1, 2.5);
 
@@ -317,7 +379,7 @@ function buildDocs(){
     const b=document.createElement("button");
     b.className="chip"; b.setAttribute("aria-pressed", d===doc);
     b.innerHTML=`<div class="c-code">${d.id}</div><div class="c-dim">${d.w}\u00d7${d.h} mm</div><div class="c-name">${d.name}</div>`;
-    b.onclick=()=>{ doc=d; buildDocs(); layoutFrame(); if(img) initCrop(); draw(); renderSpec(); updateReadout(); toggleUSNote(); };
+    b.onclick=()=>{ doc=d; stepTouched1=true; buildDocs(); layoutFrame(); if(img) initCrop(); draw(); renderSpec(); updateReadout(); toggleUSNote(); updateSteps(); };
     c.appendChild(b);
   });
   renderSpec(); toggleUSNote();
@@ -378,6 +440,7 @@ async function tryAutoFit(report){
     const faces=await fd.detect(img);
     if(!faces||!faces.length){ if(report) status("Kh\u00f4ng th\u1ea5y khu\u00f4n m\u1eb7t \u2014 c\u0103n tay gi\u00fap nh\u00e9.",true); return; }
     const b=faces[0].boundingBox;
+    faceBox={x:b.x, y:b.y, w:b.width, h:b.height};   // l\u01b0u \u0111\u1ec3 coaching \u2462
     const g=guides();
     const headPx=b.height*1.5;
     const bandFrac=g.chin-g.crown;
@@ -401,11 +464,46 @@ function clampCrop(){
 function draw(){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   ctx.clearRect(0,0,CSSW,CSSH);
-  if(!img){ return; }
+  if(!img){ renderCoach(null); updateSteps(); return; }
   $("#empty").style.display="none";
   ctx.drawImage(img, sx,sy,sw,sh, 0,0,CSSW,CSSH);
   drawGuides();
   $("#zoomLbl").textContent = "\u00d7"+(img.width/sw).toFixed(2);
+  renderCoach(coachAlign());   // \u2462 c\u1eadp nh\u1eadt chip coaching
+  updateSteps();               // \u2461 c\u1eadp nh\u1eadt badge b\u01b0\u1edbc
+}
+
+/* ---- \u2461 Badge b\u01b0\u1edbc: \u0111\u1ecdc state, \u0111\u1ed5i x\u00e1m/xanh ---- */
+function updateSteps(){
+  const set=(n,done)=>{const e=document.querySelector('.step[data-s="'+n+'"]'); if(e) e.classList.toggle('done', !!done);};
+  set(1, stepTouched1 || !!img);
+  set(2, !!img);
+  set(3, !!img && alignOk);
+  set(4, exported);
+}
+
+/* ---- \u2462 Coaching: \u01b0\u1edbc l\u01b0\u1ee3ng \u0111\u1ec9nh \u0111\u1ea7u/c\u1eb1m vs v\u1ea1ch guide ---- */
+function coachAlign(){
+  if(!img){ alignOk=false; return null; }
+  const g=guides();
+  if(!faceBox){ alignOk=false; return {state:'neutral', msg:'\u0110\u01b0a \u0111\u1ec9nh \u0111\u1ea7u v\u1ec1 v\u1ea1ch tr\u00ean, c\u1eb1m v\u1ec1 v\u1ea1ch d\u01b0\u1edbi r\u1ed3i ki\u1ec3m tra'}; }
+  // \u0111\u1ec9nh \u0111\u1ea7u ~ cao h\u01a1n m\u1eb7t 35%, c\u1eb1m ~ \u0111\u00e1y m\u1eb7t; quy v\u1ec1 t\u1ec9 l\u1ec7 trong khung crop hi\u1ec7n t\u1ea1i
+  const headTop=faceBox.y - faceBox.h*0.35;
+  const chinY=faceBox.y + faceBox.h*0.95;
+  const fTop=(headTop - sy)/sh, fChin=(chinY - sy)/sh;
+  const tol=0.05;
+  if(fTop < g.crown - tol) return {state:'hint', msg:'\u2b07 \u0110\u1ea7u qu\u00e1 cao \u2014 k\u00e9o \u1ea3nh xu\u1ed1ng ho\u1eb7c thu nh\u1ecf'};
+  if(fTop > g.crown + tol) return {state:'hint', msg:'\u2b06 K\u00e9o/zoom cho \u0111\u1ec9nh \u0111\u1ea7u ch\u1ea1m v\u1ea1ch tr\u00ean'};
+  if(fChin > g.chin + tol) return {state:'hint', msg:'\u2b06 C\u1eb1m qu\u00e1 th\u1ea5p \u2014 ph\u00f3ng to m\u1ed9t ch\u00fat'};
+  if(fChin < g.chin - tol) return {state:'hint', msg:'\u2b07 C\u1eb1m ch\u01b0a ch\u1ea1m v\u1ea1ch d\u01b0\u1edbi \u2014 thu nh\u1ecf m\u1ed9t ch\u00fat'};
+  return {state:'ok', msg:'\u2713 \u0110\u1ea7u \u0111\u00fang c\u1ee1 chu\u1ea9n \u2014 s\u1eb5n s\u00e0ng xu\u1ea5t'};
+}
+function renderCoach(c){
+  const el=$("#coach");
+  if(!c){ alignOk=false; el.className="coach"; el.textContent=""; return; }
+  alignOk = c.state==='ok';
+  el.className="coach show "+(c.state==='ok'?'ok':c.state==='hint'?'hint2':'');
+  el.textContent=c.msg;
 }
 function drawGuides(){
   const g=guides();
@@ -498,7 +596,7 @@ function loadFile(f){
   const rd=new FileReader();
   rd.onload=()=>{
     const im=new Image();
-    im.onload=()=>{ img=im; layoutFrame(); initCrop(); draw(); updateReadout(); enableExport(); status(""); };
+    im.onload=()=>{ img=im; faceBox=null; layoutFrame(); initCrop(); draw(); updateReadout(); enableExport(); status(""); };
     im.onerror=()=>status("Kh\u00f4ng m\u1edf \u0111\u01b0\u1ee3c \u1ea3nh n\u00e0y \u2014 th\u1eed m\u1ed9t \u1ea3nh JPG/PNG kh\u00e1c.", true);
     im.src=rd.result;                       // data URL: qua \u0111\u01b0\u1ee3c CSP c\u1ee7a khung xem
   };
@@ -526,7 +624,7 @@ $("#btnCam").onclick=async ()=>{
 $("#btnSnap").onclick=()=>{
   const v=$("#cam"); const c=document.createElement("canvas");
   c.width=v.videoWidth; c.height=v.videoHeight; c.getContext("2d").drawImage(v,0,0);
-  const im=new Image(); im.onload=()=>{ img=im; layoutFrame(); initCrop(); draw(); updateReadout(); enableExport(); }; im.src=c.toDataURL("image/jpeg",0.95);
+  const im=new Image(); im.onload=()=>{ img=im; faceBox=null; layoutFrame(); initCrop(); draw(); updateReadout(); enableExport(); }; im.src=c.toDataURL("image/jpeg",0.95);
   stopCam();
 };
 $("#btnStop").onclick=stopCam;
@@ -605,15 +703,43 @@ $("#aAuto").onclick=()=>{ if(!img){ status("Ch\u01b0a c\u00f3 \u1ea3nh \u2014 t\
 document.querySelectorAll('.nb').forEach(b=>b.onclick=()=>nudge(+b.dataset.x,+b.dataset.y));
 
 /* ---- Hi\u1ec7n k\u1ebft qu\u1ea3 trong trang (ch\u1ed1ng sandbox ch\u1eb7n t\u1ea3i) ---- */
-let lastCv=null, lastName="";
+let lastCv=null, lastName="", lastStdUrl="", lastOrigUrl="";
+// d\u1ef1ng \u1ea3nh g\u1ed1c "contain" v\u00e0o khung WxH (n\u1ec1n tr\u1eafng) \u0111\u1ec3 so s\u00e1nh tr\u01b0\u1edbc/sau
+function buildOrig(W,H){
+  const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  const c=cv.getContext("2d"); c.imageSmoothingQuality="high";
+  c.fillStyle="#eef2f6"; c.fillRect(0,0,W,H);
+  const s=Math.min(W/img.width, H/img.height);
+  const w=img.width*s, h=img.height*s;
+  c.drawImage(img, (W-w)/2, (H-h)/2, w, h);
+  return cv.toDataURL("image/jpeg",0.9);
+}
+function baCaption(which){
+  const outW=Math.round(doc.w/MM*DPI), outH=Math.round(doc.h/MM*DPI);
+  if(which==="orig") return "\u1ea2nh g\u1ed1c \u00b7 ch\u01b0a chu\u1ea9n ho\u00e1 (t\u1ec9 l\u1ec7 tu\u1ef3 \u00fd, \u0111\u1ea7u ch\u01b0a \u0111\u00fang c\u1ee1)";
+  return "\u1ea2nh chu\u1ea9n \u00b7 "+doc.w+"\u00d7"+doc.h+"mm \u00b7 \u0111\u1ea7u "+doc.head[0]+"\u2013"+doc.head[1]+"mm \u00b7 "+outW+"\u00d7"+outH+"px @300dpi";
+}
+function setBA(which){
+  [...$("#baToggle").children].forEach(b=>b.setAttribute("aria-pressed", b.dataset.b===which));
+  $("#out").src = which==="orig" ? lastOrigUrl : lastStdUrl;
+  $("#baCap").textContent = baCaption(which);
+}
 function showResult(cv,name){
   lastCv=cv; lastName=name;
-  $("#out").src=cv.toDataURL("image/jpeg",0.92);
+  lastStdUrl=cv.toDataURL("image/jpeg",0.92);
+  lastOrigUrl = img ? buildOrig(cv.width, cv.height) : "";
+  exported=true; updateSteps();
   $("#resName").textContent=name;
+  // toggle tr\u01b0\u1edbc/sau ch\u1ec9 hi\u1ec7n khi c\u00f3 \u1ea3nh g\u1ed1c \u0111\u1ec3 so
+  $("#baToggle").style.display = lastOrigUrl ? "flex" : "none";
+  setBA("std");
   $("#resultPanel").style.display="block";
   $("#resultPanel").scrollIntoView({behavior:"smooth",block:"start"});
   status("\u1ea2nh \u0111\u00e3 t\u1ea1o \u2014 nh\u1ea5n gi\u1eef \u1ea3nh trong khung K\u1ebft qu\u1ea3 \u0111\u1ec3 l\u01b0u v\u1ec1 m\u00e1y.",false);
 }
+document.getElementById("baToggle").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(b) setBA(b.dataset.b);
+});
 $("#btnSaveTry").onclick=()=>{ if(lastCv) dl(lastCv,lastName); };
 $("#btnCloseRes").onclick=()=>{ $("#resultPanel").style.display="none"; };
 
@@ -657,7 +783,7 @@ $("#btnSheet").onclick=()=>{
 };
 
 /* ---- init ---- */
-buildDocs(); layoutFrame(); updateReadout();
+buildDocs(); layoutFrame(); updateReadout(); updateSteps();
 window.addEventListener("resize",()=>{ layoutFrame(); if(img){clampCrop();draw();} });
 </script>
 </body>
