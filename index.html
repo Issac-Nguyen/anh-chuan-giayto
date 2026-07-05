@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>&#7842;nh Chu&#7849;n &#8212; c&#244;ng c&#7909; &#7843;nh gi&#7845;y t&#7901;</title>
+<style>
+  :root{
+    --ink:#0E1A2B;          /* m&#7921;c xanh b&#7843;n v&#7869; */
+    --ink-soft:#33465E;
+    --paper:#EDF1F5;        /* n&#7873;n gi&#7845;y k&#7929; thu&#7853;t, m&#225;t */
+    --panel:#FFFFFF;
+    --line:#C4D0DD;         /* hairline */
+    --blue:#0F9CB8;         /* &#273;&#432;&#7901;ng &#273;o / guide */
+    --blue-ink:#0A6A7D;
+    --pass:#1F9D63;
+    --warn:#C83E3E;
+    --amber:#B8791B;
+    --shadow:0 1px 0 rgba(14,26,43,.04), 0 8px 24px -12px rgba(14,26,43,.28);
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    -webkit-text-size-adjust:100%;
+    line-height:1.45;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:16px 14px 40px}
+
+  header{margin:6px 2px 16px}
+  .brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .brand h1{
+    font-size:26px;letter-spacing:-.02em;margin:0;font-weight:800;
+  }
+  .brand .code{
+    font-family:var(--mono);font-size:11px;color:var(--blue-ink);
+    border:1px solid var(--line);border-radius:4px;padding:2px 6px;background:var(--panel);
+    text-transform:uppercase;letter-spacing:.06em;
+  }
+  .tag{
+    font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);
+    margin-top:7px;letter-spacing:.02em;display:flex;align-items:center;gap:7px;
+  }
+  .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--pass);flex:none;box-shadow:0 0 0 3px rgba(31,157,99,.15)}
+
+  .panel{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    box-shadow:var(--shadow);padding:14px;margin-bottom:12px;
+  }
+  .panel > .lbl{
+    font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;
+    color:var(--ink-soft);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;
+  }
+
+  /* doc chips */
+  .docs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;-webkit-overflow-scrolling:touch}
+  .docs::-webkit-scrollbar{height:0}
+  .chip{
+    flex:none;border:1px solid var(--line);background:var(--panel);border-radius:9px;
+    padding:8px 10px;cursor:pointer;min-width:96px;text-align:left;transition:.12s;
+  }
+  .chip .c-code{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink)}
+  .chip .c-dim{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);margin-top:2px}
+  .chip .c-name{font-size:11px;color:var(--ink-soft);margin-top:3px}
+  .chip[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);}
+  .chip[aria-pressed="true"] .c-code{color:#fff}
+  .chip[aria-pressed="true"] .c-dim,.chip[aria-pressed="true"] .c-name{color:#B9C6D6}
+
+  /* spec strip */
+  .spec{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:12px}
+  .spec div{background:var(--panel);padding:8px 10px}
+  .spec .k{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft)}
+  .spec .v{font-family:var(--mono);font-size:13px;font-weight:700;margin-top:2px}
+
+  /* source */
+  .src{display:flex;gap:8px}
+  .btn{
+    font-family:var(--sans);font-size:13.5px;font-weight:600;border-radius:9px;
+    padding:11px 12px;border:1px solid var(--ink);cursor:pointer;flex:1;text-align:center;
+    background:var(--panel);color:var(--ink);transition:.12s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--ink);color:#fff}
+  .btn.ghost{border-color:var(--line);color:var(--ink-soft)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  /* viewport */
+  .stage{position:relative;display:flex;justify-content:center}
+  .frame{
+    position:relative;background:
+      repeating-conic-gradient(#e7ecf1 0% 25%, #f4f7fa 0% 50%) 50%/16px 16px;
+    border:1px solid var(--line);border-radius:6px;overflow:hidden;touch-action:none;
+    box-shadow:inset 0 0 0 1px rgba(14,26,43,.03);
+  }
+  canvas#view{display:block;width:100%;height:100%}
+  .empty{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:6px;color:var(--ink-soft);font-family:var(--mono);font-size:11.5px;text-align:center;padding:20px;
+  }
+  .empty svg{opacity:.5}
+
+  .hint{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-align:center;margin-top:9px}
+  .hint b{color:var(--blue-ink)}
+
+  /* readout */
+  .read{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+  .rc{font-family:var(--mono);font-size:11px;padding:5px 9px;border-radius:20px;border:1px solid var(--line);
+    display:flex;align-items:center;gap:6px;color:var(--ink-soft);background:var(--panel)}
+  .rc .s{width:7px;height:7px;border-radius:50%;background:var(--ink-soft)}
+  .rc.ok{color:var(--pass);border-color:rgba(31,157,99,.4)} .rc.ok .s{background:var(--pass)}
+  .rc.no{color:var(--warn);border-color:rgba(200,62,62,.4)} .rc.no .s{background:var(--warn)}
+
+  /* controls */
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:0}
+  .row .t{font-size:13.5px}
+  .row .t small{display:block;color:var(--ink-soft);font-size:11px;margin-top:1px}
+  input[type=range]{width:130px;accent-color:var(--ink)}
+  .sw{position:relative;width:44px;height:26px;flex:none}
+  .sw input{opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+  .sw i{position:absolute;inset:0;background:var(--line);border-radius:20px;transition:.15s;pointer-events:none}
+  .sw i:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .sw input:checked + i{background:var(--ink)}
+  .sw input:checked + i:after{transform:translateX(18px)}
+
+  .note{font-family:var(--mono);font-size:11px;line-height:1.5;border-radius:8px;padding:9px 10px;margin-top:10px;display:none}
+  .note.show{display:block}
+  .note.us{background:rgba(200,62,62,.07);border:1px solid rgba(200,62,62,.3);color:#8f2a2a}
+
+  /* actions */
+  .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:2px}
+  .acts .btn{flex:none}
+  .seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:8px}
+  .seg button{flex:1;background:var(--panel);border:0;padding:8px;font-family:var(--mono);font-size:11px;color:var(--ink-soft);cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+  /* checklist */
+  details{border-top:1px solid var(--line);margin-top:4px}
+  summary{list-style:none;cursor:pointer;padding:11px 0;font-family:var(--mono);font-size:11px;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);display:flex;justify-content:space-between}
+  summary::-webkit-details-marker{display:none}
+  details[open] summary .arw{transform:rotate(90deg)}
+  .arw{transition:.15s}
+  .check{font-size:12.5px;color:var(--ink-soft);padding:0 0 12px}
+  .check li{margin:6px 0;padding-left:2px}
+
+  footer{font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);text-align:center;margin-top:18px;line-height:1.6}
+  a{color:var(--blue-ink)}
+  video#cam{display:none}
+  .vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  label.btn{display:flex;align-items:center;justify-content:center}
+  .msg{font-family:var(--mono);font-size:11.5px;margin:10px 0 0;line-height:1.55;display:none}
+  .msg.show{display:block}
+  .msg.err{color:var(--warn)}
+  .msg.ok{color:var(--ink-soft)}
+  .adjust{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:11px}
+  .ab{font-family:var(--mono);font-size:12px;padding:10px 4px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;cursor:pointer;text-align:center}
+  .ab:active{transform:translateY(1px);background:#eef3f8}
+  .ab.nb{font-size:15px;color:var(--blue-ink)}
+  #out{width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <h1>&#7842;nh Chu&#7849;n</h1>
+      <span class="code">instrument</span>
+    </div>
+    <div class="tag"><span class="dot"></span> X&#7917; l&#253; ngay tr&#234;n m&#225;y &#183; &#7843;nh kh&#244;ng r&#7901;i thi&#7871;t b&#7883; &#183; kh&#244;ng t&#224;i kho&#7843;n</div>
+  </header>
+
+  <!-- DOC PICKER -->
+  <div class="panel">
+    <p class="lbl">Lo&#7841;i gi&#7845;y t&#7901; <span id="docHint">ch&#7885;n &#273;&#7883;nh d&#7841;ng</span></p>
+    <div class="docs" id="docs"></div>
+    <div class="spec" id="spec"></div>
+  </div>
+
+  <!-- SOURCE -->
+  <div class="panel">
+    <p class="lbl">Ngu&#7891;n &#7843;nh</p>
+    <div class="src">
+      <label class="btn" for="file">T&#7843;i &#7843;nh l&#234;n</label>
+      <button class="btn ghost" id="btnCam">D&#249;ng camera</button>
+    </div>
+    <input type="file" id="file" accept="image/*" class="vh">
+    <p class="msg" id="msg"></p>
+    <video id="cam" playsinline muted></video>
+    <div id="camActs" style="display:none;margin-top:8px" class="src">
+      <button class="btn primary" id="btnSnap">Ch&#7909;p</button>
+      <button class="btn ghost" id="btnStop">Hu&#7927;</button>
+    </div>
+  </div>
+
+  <!-- STAGE -->
+  <div class="panel">
+    <p class="lbl">C&#259;n khu&#244;n <span id="zoomLbl" style="font-family:var(--mono)">&#8212;</span></p>
+    <div class="stage">
+      <div class="frame" id="frame">
+        <canvas id="view"></canvas>
+        <div class="empty" id="empty">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="12" cy="9" r="3.4"/><path d="M4.5 20c0-3.6 3.4-6 7.5-6s7.5 2.4 7.5 6"/>
+          </svg>
+          ch&#432;a c&#243; &#7843;nh<br>t&#7843;i l&#234;n ho&#7863;c ch&#7909;p &#273;&#7875; b&#7855;t &#273;&#7847;u
+        </div>
+      </div>
+    </div>
+    <p class="hint">K&#233;o &#273;&#7875; d&#7901;i &#183; ch&#7909;m 2 ng&#243;n &#273;&#7875; ph&#243;ng &#183; &#273;&#432;a <b>&#273;&#7881;nh &#273;&#7847;u</b> ch&#7841;m v&#7841;ch tr&#234;n, <b>c&#7857;m</b> ch&#7841;m v&#7841;ch d&#432;&#7899;i</p>
+
+    <div class="adjust">
+      <button class="ab" id="aAuto">&#8982; T&#7921; c&#259;n</button>
+      <button class="ab" id="aReset">&#8634; &#272;&#7863;t l&#7841;i</button>
+      <button class="ab" id="aZin">&#65291; To</button>
+      <button class="ab" id="aZout">&#65293; Nh&#7887;</button>
+      <button class="ab nb" data-x="0" data-y="-1">&#8593;</button>
+      <button class="ab nb" data-x="-1" data-y="0">&#8592;</button>
+      <button class="ab nb" data-x="1" data-y="0">&#8594;</button>
+      <button class="ab nb" data-x="0" data-y="1">&#8595;</button>
+    </div>
+
+    <div class="read" id="read"></div>
+
+    <div class="note us" id="usNote">
+      &#9888; Chu&#7849;n M&#7929; 2026: m&#7885;i ch&#7881;nh s&#7917;a n&#7873;n/khu&#244;n m&#7863;t b&#7857;ng AI &#273;&#7873;u b&#7883; m&#225;y t&#7921; &#273;&#7897;ng t&#7915; ch&#7889;i. T&#7855;t "l&#224;m n&#7873;n tr&#7855;ng", ch&#7909;p tr&#432;&#7899;c t&#432;&#7901;ng tr&#7855;ng th&#7853;t.
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="panel">
+    <p class="lbl">X&#7917; l&#253; n&#7873;n</p>
+    <div class="row">
+      <div class="t">L&#224;m n&#7873;n tr&#7855;ng
+        <small>ho&#7841;t &#273;&#7897;ng t&#7889;t nh&#7845;t khi ch&#7909;p tr&#432;&#7899;c t&#432;&#7901;ng ph&#7859;ng, s&#225;ng &#273;&#7873;u</small>
+      </div>
+      <label class="sw"><input type="checkbox" id="bgTog"><i></i></label>
+    </div>
+    <div class="row" id="tolRow" style="display:none">
+      <div class="t">&#272;&#7897; nh&#7841;y t&#225;ch n&#7873;n <small id="tolVal">trung b&#236;nh</small></div>
+      <input type="range" id="tol" min="20" max="140" value="72">
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="panel">
+    <p class="lbl">Xu&#7845;t k&#7871;t qu&#7843;</p>
+    <div class="seg" id="sheetSize">
+      <button data-w="6" data-h="4" aria-pressed="true">t&#7901; in 6&#215;4&#8243;</button>
+      <button data-w="5.9" data-h="3.94">t&#7901; in 15&#215;10cm</button>
+    </div>
+    <div class="acts">
+      <button class="btn primary" id="btnPhoto" disabled>T&#7843;i &#7843;nh s&#7889;</button>
+      <button class="btn" id="btnSheet" disabled>T&#7843;i t&#7901; in gh&#233;p</button>
+    </div>
+    <details>
+      <summary>Checklist h&#7907;p l&#7879; <span class="arw">&#8250;</span></summary>
+      <ul class="check">
+        <li>N&#7873;n tr&#7855;ng/x&#225;m nh&#7841;t ph&#7859;ng, <b>kh&#244;ng b&#243;ng &#273;&#7893;</b> sau &#273;&#7847;u.</li>
+        <li>M&#7863;t nh&#236;n th&#7859;ng, bi&#7875;u c&#7843;m trung t&#237;nh, mi&#7879;ng kh&#233;p, m&#7855;t m&#7903;.</li>
+        <li>Kh&#244;ng k&#237;nh r&#226;m, kh&#244;ng m&#361;; k&#237;nh th&#432;&#7901;ng ph&#7843;i th&#7845;y r&#245; m&#7855;t, kh&#244;ng lo&#225;.</li>
+        <li>&#193;nh s&#225;ng &#273;&#7873;u hai b&#234;n m&#7863;t, kh&#244;ng ch&#225;y s&#225;ng, kh&#244;ng &#273;&#7893; b&#243;ng l&#234;n m&#7863;t.</li>
+        <li>&#272;&#7881;nh &#273;&#7847;u v&#224; c&#7857;m n&#7857;m &#273;&#250;ng hai v&#7841;ch &#8212; quy&#7871;t &#273;&#7883;nh t&#7881; l&#7879; &#273;&#7847;u theo quy &#273;&#7883;nh.</li>
+        <li><b>Ki&#7875;m tra l&#7841;i</b> y&#234;u c&#7847;u ch&#237;nh th&#7913;c c&#7911;a c&#417; quan c&#7845;p tr&#432;&#7899;c khi n&#7897;p.</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="panel" id="resultPanel" style="display:none">
+    <p class="lbl">K&#7871;t qu&#7843; <span id="resName" style="font-family:var(--mono)"></span></p>
+    <img id="out" alt="&#7843;nh k&#7871;t qu&#7843;">
+    <p class="hint" style="margin-top:9px">&#128204; <b>Nh&#7845;n gi&#7919; &#7843;nh</b> &#7903; tr&#234;n &#8594; <b>L&#432;u &#7843;nh</b> (c&#225;ch ch&#7855;c ch&#7855;n nh&#7845;t tr&#234;n &#273;i&#7879;n tho&#7841;i).</p>
+    <div class="acts" style="margin-top:8px">
+      <button class="btn" id="btnSaveTry">Th&#7917; t&#7843;i v&#7873;</button>
+      <button class="btn ghost" id="btnCloseRes">&#272;&#243;ng</button>
+    </div>
+  </div>
+
+  <footer>
+    &#7842;nh Chu&#7849;n &#183; b&#7843;n d&#7921;ng th&#7917; &#183; vanilla + canvas, kh&#244;ng th&#432; vi&#7879;n ngo&#224;i<br>
+    S&#7889; li&#7879;u l&#224; h&#432;&#7899;ng d&#7851;n tham kh&#7843;o &#8212; lu&#244;n &#273;&#7889;i chi&#7871;u quy &#273;&#7883;nh c&#417; quan c&#7845;p.
+  </footer>
+</div>
+
+<script>
+"use strict";
+const DPI = 300, MM = 25.4;
+const $ = s => document.querySelector(s);
+
+/* ---- \u0110\u1ecbnh d\u1ea1ng gi\u1ea5y t\u1edd (s\u1ed1 li\u1ec7u tham kh\u1ea3o) ---- */
+const DOCS = [
+  {id:"US-2R", name:"H\u1ed9 chi\u1ebfu/visa M\u1ef9", w:51, h:51, head:[25,35], bg:"tr\u1eafng", pxMin:600, pxMax:1200, us:true},
+  {id:"EU-SCH", name:"Visa Schengen / EU", w:35, h:45, head:[32,36], bg:"tr\u1eafng/x\u00e1m"},
+  {id:"UK-PP",  name:"H\u1ed9 chi\u1ebfu Anh", w:35, h:45, head:[29,34], bg:"x\u00e1m nh\u1ea1t"},
+  {id:"CN-VISA",name:"Visa Trung Qu\u1ed1c", w:33, h:48, head:[28,33], bg:"tr\u1eafng"},
+  {id:"VN-3\u00d74", name:"Gi\u1ea5y t\u1edd VN 3\u00d74", w:30, h:40, head:[24,30], bg:"tr\u1eafng/xanh"},
+  {id:"VN-4\u00d76", name:"Gi\u1ea5y t\u1edd VN 4\u00d76", w:40, h:60, head:[32,38], bg:"tr\u1eafng/xanh"},
+];
+
+/* ---- State ---- */
+let img=null, doc=DOCS[0];
+let sx=0, sy=0, sw=0, sh=0;      // crop trong to\u1ea1 \u0111\u1ed9 pixel \u1ea3nh g\u1ed1c, t\u1ec9 l\u1ec7 = doc.w/doc.h
+let stream=null;
+const view=$("#view"), fr=$("#frame"), ctx=view.getContext("2d");
+let CSSW=0, CSSH=0, DPR=Math.min(window.devicePixelRatio||1, 2.5);
+
+/* ---- D\u1ef1ng doc chips + spec ---- */
+function buildDocs(){
+  const c=$("#docs"); c.innerHTML="";
+  DOCS.forEach(d=>{
+    const b=document.createElement("button");
+    b.className="chip"; b.setAttribute("aria-pressed", d===doc);
+    b.innerHTML=`<div class="c-code">${d.id}</div><div class="c-dim">${d.w}\u00d7${d.h} mm</div><div class="c-name">${d.name}</div>`;
+    b.onclick=()=>{ doc=d; buildDocs(); layoutFrame(); if(img) initCrop(); draw(); renderSpec(); updateReadout(); toggleUSNote(); };
+    c.appendChild(b);
+  });
+  renderSpec(); toggleUSNote();
+}
+function renderSpec(){
+  $("#spec").innerHTML=`
+    <div><div class="k">K\u00edch th\u01b0\u1edbc</div><div class="v">${doc.w}\u00d7${doc.h}<span style="font-size:10px;color:var(--ink-soft)"> mm</span></div></div>
+    <div><div class="k">Cao \u0111\u1ea7u</div><div class="v">${doc.head[0]}\u2013${doc.head[1]}<span style="font-size:10px;color:var(--ink-soft)"> mm</span></div></div>
+    <div><div class="k">N\u1ec1n</div><div class="v" style="font-size:11.5px">${doc.bg}</div></div>`;
+  $("#docHint").textContent = doc.id;
+}
+function toggleUSNote(){
+  const on = doc.us && $("#bgTog").checked;
+  $("#usNote").classList.toggle("show", on);
+}
+
+/* ---- Guide theo t\u1ec9 l\u1ec7 chi\u1ec1u cao khung ---- */
+function guides(){
+  const headMid=(doc.head[0]+doc.head[1])/2;
+  const headFrac=headMid/doc.h;                 // \u0111\u1ea7u chi\u1ebfm bao nhi\u00eau chi\u1ec1u cao
+  const top=(1-headFrac)*0.42;                  // kho\u1ea3ng h\u1edf tr\u00ean \u0111\u1ec9nh \u0111\u1ea7u
+  const crown=top, chin=top+headFrac, eye=top+headFrac*0.44;
+  return {crown, chin, eye};
+}
+
+/* ---- Layout khung theo t\u1ec9 l\u1ec7 doc ---- */
+function layoutFrame(){
+  const maxW=$(".wrap").clientWidth-28-2;       // tr\u1eeb padding panel
+  const aspect=doc.w/doc.h;
+  let w=Math.min(maxW, 360), h=w/aspect;
+  const maxH=Math.min(window.innerHeight*0.5, 460);
+  if(h>maxH){ h=maxH; w=h*aspect; }
+  CSSW=w; CSSH=h;
+  fr.style.width=w+"px"; fr.style.height=h+"px";
+  view.style.width=w+"px"; view.style.height=h+"px";
+  view.width=Math.round(w*DPR); view.height=Math.round(h*DPR);
+}
+
+/* ---- Crop kh\u1edfi t\u1ea1o (cover, gi\u1eefa) ---- */
+function initCrop(){
+  const aspect=doc.w/doc.h;
+  // cover: crop l\u1edbn nh\u1ea5t c\u00f3 t\u1ec9 l\u1ec7 = aspect n\u1eb1m g\u1ecdn trong \u1ea3nh
+  if(img.width/img.height > aspect){ sh=img.height; sw=sh*aspect; }
+  else { sw=img.width; sh=sw/aspect; }
+  // thu nh\u1ecf crop m\u1ed9t ch\u00fat \u0111\u1ec3 c\u00f3 ch\u1ed7 c\u0103n (\u0111\u1ea7u ~ gi\u1eefa)
+  const k=0.82; sw*=k; sh*=k;
+  sx=(img.width-sw)/2; sy=(img.height-sh)/2;
+  tryAutoFit();
+  clampCrop();
+}
+
+/* ---- Auto-fit b\u1eb1ng FaceDetector n\u1ebfu tr\u00ecnh duy\u1ec7t h\u1ed7 tr\u1ee3 (kh\u00f4ng b\u1eaft bu\u1ed9c) ---- */
+async function tryAutoFit(report){
+  try{
+    if(!('FaceDetector' in window)){ if(report) status("Tr\u00ecnh duy\u1ec7t kh\u00f4ng c\u00f3 nh\u1eadn di\u1ec7n m\u1eb7t \u2014 d\u00f9ng m\u0169i t\u00ean & To/Nh\u1ecf \u0111\u1ec3 c\u0103n tay.",false); return; }
+    if(report) status("\u0111ang c\u0103n t\u1ef1 \u0111\u1ed9ng\u2026");
+    const fd=new window.FaceDetector({fastMode:true, maxDetectedFaces:1});
+    const faces=await fd.detect(img);
+    if(!faces||!faces.length){ if(report) status("Kh\u00f4ng th\u1ea5y khu\u00f4n m\u1eb7t \u2014 c\u0103n tay gi\u00fap nh\u00e9.",true); return; }
+    const b=faces[0].boundingBox;
+    const g=guides();
+    const headPx=b.height*1.5;
+    const bandFrac=g.chin-g.crown;
+    sh=headPx/bandFrac; sw=sh*(doc.w/doc.h);
+    const faceCx=b.x+b.width/2, faceTop=b.y-b.height*0.32;
+    sx=faceCx - sw/2;
+    sy=faceTop - g.crown*sh;
+    clampCrop(); draw(); updateReadout(); if(report) status("\u0111\u00e3 c\u0103n t\u1ef1 \u0111\u1ed9ng \u2713", false);
+  }catch(e){ if(report) status("Kh\u00f4ng c\u0103n t\u1ef1 \u0111\u1ed9ng \u0111\u01b0\u1ee3c \u2014 c\u0103n tay gi\u00fap nh\u00e9.",true); }
+}
+
+function clampCrop(){
+  sw=Math.min(sw, img.width); sh=sw/(doc.w/doc.h);
+  if(sh>img.height){ sh=img.height; sw=sh*(doc.w/doc.h); }
+  const minW=img.width*0.12; if(sw<minW){ sw=minW; sh=sw/(doc.w/doc.h); }
+  sx=Math.max(0, Math.min(sx, img.width-sw));
+  sy=Math.max(0, Math.min(sy, img.height-sh));
+}
+
+/* ---- V\u1ebd ---- */
+function draw(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,CSSW,CSSH);
+  if(!img){ return; }
+  $("#empty").style.display="none";
+  ctx.drawImage(img, sx,sy,sw,sh, 0,0,CSSW,CSSH);
+  drawGuides();
+  $("#zoomLbl").textContent = "\u00d7"+(img.width/sw).toFixed(2);
+}
+function drawGuides(){
+  const g=guides();
+  const cy1=g.crown*CSSH, cy2=g.chin*CSSH, ey=g.eye*CSSH, cx=CSSW/2;
+  ctx.save();
+  ctx.strokeStyle="rgba(15,156,184,.9)"; ctx.fillStyle="rgba(15,156,184,.9)";
+  ctx.lineWidth=1;
+  // crown + chin
+  [cy1,cy2].forEach((y,i)=>{
+    ctx.beginPath(); ctx.setLineDash([]); ctx.moveTo(0,y); ctx.lineTo(CSSW,y); ctx.stroke();
+    ctx.font="10px "+getComputedStyle(document.body).getPropertyValue('--mono');
+    ctx.fillText(i?"c\u1eb1m":"\u0111\u1ec9nh \u0111\u1ea7u", 5, y+ (i? -4:12));
+  });
+  // eye line (\u0111\u1ee9t)
+  ctx.setLineDash([4,4]); ctx.strokeStyle="rgba(15,156,184,.45)";
+  ctx.beginPath(); ctx.moveTo(0,ey); ctx.lineTo(CSSW,ey); ctx.stroke();
+  ctx.setLineDash([]);
+  // tr\u1ee5c d\u1ecdc
+  ctx.strokeStyle="rgba(15,156,184,.35)";
+  ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,CSSH); ctx.stroke();
+  // oval \u0111\u1ea7u g\u1ee3i \u00fd
+  ctx.strokeStyle="rgba(15,156,184,.28)";
+  const ovH=(cy2-cy1), ovW=ovH*0.74, ovcy=(cy1+cy2)/2;
+  ctx.beginPath(); ctx.ellipse(cx, ovcy, ovW/2, ovH/2, 0,0,Math.PI*2); ctx.stroke();
+  // khung an to\u00e0n vi\u1ec1n
+  ctx.strokeStyle="rgba(14,26,43,.12)"; ctx.strokeRect(.5,.5,CSSW-1,CSSH-1);
+  ctx.restore();
+}
+
+/* ---- Readout ---- */
+function updateReadout(){
+  const r=$("#read"); if(!img){ r.innerHTML=""; return; }
+  const px=doc.w/MM*DPI;
+  const outW=Math.round(doc.w/MM*DPI), outH=Math.round(doc.h/MM*DPI);
+  const srcEnough = sw>= (doc.pxMin? doc.pxMin:outW)*0.85; // \u0111\u1ee7 \u0111i\u1ec3m \u1ea3nh ngu\u1ed3n?
+  const items=[
+    {ok:true, t:`t\u1ec9 l\u1ec7 ${doc.w}:${doc.h} \u2713`},
+    {ok:srcEnough, t:`ngu\u1ed3n ${Math.round(sw)}px ${srcEnough?"\u0111\u1ee7 n\u00e9t":"h\u01a1i thi\u1ebfu"}`},
+    {ok:true, t:`xu\u1ea5t ${outW}\u00d7${outH}px @${DPI}dpi`},
+  ];
+  r.innerHTML=items.map(i=>`<span class="rc ${i.ok?'ok':'no'}"><span class="s"></span>${i.t}</span>`).join("");
+}
+
+/* ---- T\u01b0\u01a1ng t\u00e1c: pan + pinch ---- */
+const pts=new Map();
+let last=null, pinchD=0, pinchMid=null;
+fr.addEventListener("pointerdown",e=>{ fr.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1) last={x:e.clientX,y:e.clientY};
+  if(pts.size===2){ const a=[...pts.values()]; pinchD=dist(a[0],a[1]); pinchMid=mid(a[0],a[1]); }
+});
+fr.addEventListener("pointermove",e=>{
+  if(!pts.has(e.pointerId)||!img) return;
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1&&last){
+    const dx=e.clientX-last.x, dy=e.clientY-last.y;
+    sx-=dx*(sw/CSSW); sy-=dy*(sh/CSSH); clampCrop(); draw();
+    last={x:e.clientX,y:e.clientY};
+  } else if(pts.size===2){
+    const a=[...pts.values()]; const d=dist(a[0],a[1]); const m=mid(a[0],a[1]);
+    if(pinchD>0){ zoomAt(pinchD/d, m); }  // d t\u0103ng => ph\u00f3ng to => crop nh\u1ecf l\u1ea1i
+    pinchD=d; pinchMid=m;
+  }
+});
+function endPtr(e){ pts.delete(e.pointerId); last=null; if(pts.size<2)pinchD=0;
+  if(pts.size===1){ const p=[...pts.values()][0]; last={x:p.x,y:p.y}; } }
+fr.addEventListener("pointerup",endPtr); fr.addEventListener("pointercancel",endPtr);
+fr.addEventListener("wheel",e=>{ if(!img)return; e.preventDefault();
+  const rect=fr.getBoundingClientRect(); zoomAt(e.deltaY>0?1.06:0.94,{x:e.clientX-rect.left+rect.left,y:e.clientY}); },{passive:false});
+
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function mid(a,b){return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}}
+function zoomAt(factor, screenMid){
+  const rect=fr.getBoundingClientRect();
+  const fxx=(screenMid.x-rect.left)/CSSW, fyy=(screenMid.y-rect.top)/CSSH;
+  const ix=sx+fxx*sw, iy=sy+fyy*sh;
+  let nsw=sw*factor; nsw=Math.max(img.width*0.12, Math.min(nsw, img.width));
+  let nsh=nsw/(doc.w/doc.h);
+  if(nsh>img.height){ nsh=img.height; nsw=nsh*(doc.w/doc.h); }
+  sx=ix-fxx*nsw; sy=iy-fyy*nsh; sw=nsw; sh=nsh;
+  clampCrop(); draw(); updateReadout();
+}
+
+/* ---- N\u1ea1p \u1ea3nh ---- */
+function status(t, err){ const m=$("#msg"); if(!t){ m.className="msg"; m.textContent=""; return; }
+  m.className="msg show "+(err?"err":"ok"); m.textContent=t; }
+
+function loadFile(f){
+  if(!f) return;
+  status("\u0111ang \u0111\u1ecdc \u1ea3nh\u2026");
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const im=new Image();
+    im.onload=()=>{ img=im; layoutFrame(); initCrop(); draw(); updateReadout(); enableExport(); status(""); };
+    im.onerror=()=>status("Kh\u00f4ng m\u1edf \u0111\u01b0\u1ee3c \u1ea3nh n\u00e0y \u2014 th\u1eed m\u1ed9t \u1ea3nh JPG/PNG kh\u00e1c.", true);
+    im.src=rd.result;                       // data URL: qua \u0111\u01b0\u1ee3c CSP c\u1ee7a khung xem
+  };
+  rd.onerror=()=>status("Khung xem \u0111ang ch\u1eb7n \u0111\u1ecdc file. M\u1edf file n\u00e0y qua HTTPS tr\u00ean \u0111i\u1ec7n tho\u1ea1i \u0111\u1ec3 d\u00f9ng \u0111\u1ea7y \u0111\u1ee7.", true);
+  rd.readAsDataURL(f);
+}
+$("#file").addEventListener("change",e=>{ loadFile(e.target.files[0]); e.target.value=""; });
+
+/* ---- Camera ---- */
+$("#btnCam").onclick=async ()=>{
+  status("");
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    status("Khung xem n\u00e0y kh\u00f4ng cho m\u1edf camera. D\u00f9ng \"T\u1ea3i \u1ea3nh l\u00ean\", ho\u1eb7c m\u1edf file qua HTTPS tr\u00ean \u0111i\u1ec7n tho\u1ea1i.", true); return;
+  }
+  try{
+    status("\u0111ang m\u1edf camera\u2026");
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:1280},height:{ideal:1280}},audio:false});
+    const v=$("#cam"); v.srcObject=stream; await v.play();
+    v.style.display="block"; v.style.width="100%"; v.style.borderRadius="8px"; v.style.marginTop="8px";
+    $("#camActs").style.display="flex"; $("#btnCam").disabled=true; status("");
+  }catch(err){
+    status("Kh\u00f4ng m\u1edf \u0111\u01b0\u1ee3c camera \u2014 khung xem trong app ch\u1eb7n quy\u1ec1n camera. C\u00e1ch ch\u1ea1y th\u1eadt: t\u1ea3i file v\u1ec1 \u2192 \u0111\u01b0a l\u00ean host HTTPS (vd Netlify Drop) \u2192 m\u1edf tr\u00ean \u0111i\u1ec7n tho\u1ea1i. T\u1ea1m th\u1eddi c\u1ee9 \"T\u1ea3i \u1ea3nh l\u00ean\" \u0111\u1ec3 test \u0111\u1ee7 lu\u1ed3ng.", true);
+  }
+};
+$("#btnSnap").onclick=()=>{
+  const v=$("#cam"); const c=document.createElement("canvas");
+  c.width=v.videoWidth; c.height=v.videoHeight; c.getContext("2d").drawImage(v,0,0);
+  const im=new Image(); im.onload=()=>{ img=im; layoutFrame(); initCrop(); draw(); updateReadout(); enableExport(); }; im.src=c.toDataURL("image/jpeg",0.95);
+  stopCam();
+};
+$("#btnStop").onclick=stopCam;
+function stopCam(){ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  $("#cam").style.display="none"; $("#camActs").style.display="none"; $("#btnCam").disabled=false; }
+
+/* ---- N\u1ec1n tr\u1eafng ---- */
+$("#bgTog").addEventListener("change",e=>{ $("#tolRow").style.display=e.target.checked?"flex":"none"; toggleUSNote(); });
+$("#tol").addEventListener("input",e=>{
+  const v=+e.target.value; $("#tolVal").textContent = v<55?"nh\u1eb9":v<95?"trung b\u00ecnh":"m\u1ea1nh";
+});
+function whitenBG(cv){
+  const c=cv.getContext("2d"); const {width:W,height:H}=cv;
+  const d=c.getImageData(0,0,W,H), p=d.data;
+  // l\u1ea5y m\u00e0u n\u1ec1n = trung b\u00ecnh 4 g\u00f3c
+  const patch=(x0,y0)=>{let r=0,g=0,b=0,n=0;for(let y=y0;y<y0+10;y++)for(let x=x0;x<x0+10;x++){const i=(y*W+x)*4;r+=p[i];g+=p[i+1];b+=p[i+2];n++;}return [r/n,g/n,b/n];};
+  const cor=[patch(0,0),patch(W-10,0),patch(0,H-10),patch(W-10,H-10)];
+  const bg=[0,1,2].map(k=>cor.reduce((s,c)=>s+c[k],0)/4);
+  const tol=+$("#tol").value, soft=tol*0.6;
+  for(let i=0;i<p.length;i+=4){
+    const dd=Math.hypot(p[i]-bg[0],p[i+1]-bg[1],p[i+2]-bg[2]);
+    if(dd<tol){ p[i]=p[i+1]=p[i+2]=255; }
+    else if(dd<tol+soft){ const t=(dd-tol)/soft; p[i]=p[i]*t+255*(1-t); p[i+1]=p[i+1]*t+255*(1-t); p[i+2]=p[i+2]*t+255*(1-t); }
+  }
+  c.putImageData(d,0,0);
+}
+
+/* ---- Render crop ra canvas k\u00edch th\u01b0\u1edbc px ---- */
+function renderCrop(outW,outH){
+  const cv=document.createElement("canvas"); cv.width=outW; cv.height=outH;
+  const c=cv.getContext("2d"); c.imageSmoothingQuality="high";
+  c.fillStyle="#fff"; c.fillRect(0,0,outW,outH);
+  c.drawImage(img, sx,sy,sw,sh, 0,0,outW,outH);
+  if($("#bgTog").checked && !doc.us) whitenBG(cv);
+  else if($("#bgTog").checked && doc.us) whitenBG(cv); // v\u1eabn cho ph\u00e9p, note \u0111\u00e3 c\u1ea3nh b\u00e1o
+  return cv;
+}
+function dl(cv,name){
+  try{
+    cv.toBlob(b=>{
+      if(!b){ dlFallback(cv,name); return; }
+      const u=URL.createObjectURL(b); const a=document.createElement("a");
+      a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(u),3000);
+      status("\u0111\u00e3 xu\u1ea5t "+name+" \u2014 kh\u00f4ng th\u1ea5y file? khung xem \u0111ang ch\u1eb7n t\u1ea3i; m\u1edf qua HTTPS.", false);
+    },"image/jpeg",0.92);
+  }catch(e){ dlFallback(cv,name); }
+}
+function dlFallback(cv,name){
+  try{ const d=cv.toDataURL("image/jpeg",0.92); const w=window.open();
+    if(w){ w.document.write('<title>'+name+'</title><img src="'+d+'" style="max-width:100%">'); status("m\u1edf \u1ea3nh \u1edf tab m\u1edbi \u2014 nh\u1ea5n gi\u1eef \u0111\u1ec3 l\u01b0u v\u1ec1 m\u00e1y.",false); }
+    else status("khung xem ch\u1eb7n t\u1ea3i file. M\u1edf file qua HTTPS \u0111\u1ec3 xu\u1ea5t \u0111\u01b0\u1ee3c.",true);
+  }catch(e){ status("kh\u00f4ng xu\u1ea5t \u0111\u01b0\u1ee3c trong khung xem n\u00e0y \u2014 m\u1edf qua HTTPS.",true); }
+}
+
+function enableExport(){ $("#btnPhoto").disabled=false; $("#btnSheet").disabled=false; }
+
+/* ---- Ch\u1ec9nh tay ---- */
+function zoomCenter(factor){ if(!img) return;
+  const cx=sx+sw/2, cy=sy+sh/2;
+  let nsw=sw*factor; nsw=Math.max(img.width*0.12, Math.min(nsw, img.width));
+  let nsh=nsw/(doc.w/doc.h);
+  if(nsh>img.height){ nsh=img.height; nsw=nsh*(doc.w/doc.h); }
+  sx=cx-nsw/2; sy=cy-nsh/2; sw=nsw; sh=nsh; clampCrop(); draw(); updateReadout();
+}
+function nudge(nx,ny){ if(!img) return; sx+=nx*sw*0.04; sy+=ny*sh*0.04; clampCrop(); draw(); updateReadout(); }
+function resetCrop(){ if(!img) return;
+  const a=doc.w/doc.h;
+  if(img.width/img.height>a){ sh=img.height; sw=sh*a; } else { sw=img.width; sh=sw/a; }
+  sw*=0.82; sh*=0.82; sx=(img.width-sw)/2; sy=(img.height-sh)/2; clampCrop(); draw(); updateReadout(); status("");
+}
+$("#aZin").onclick=()=>zoomCenter(0.88);
+$("#aZout").onclick=()=>zoomCenter(1.14);
+$("#aReset").onclick=()=>resetCrop();
+$("#aAuto").onclick=()=>{ if(!img){ status("Ch\u01b0a c\u00f3 \u1ea3nh \u2014 t\u1ea3i l\u00ean tr\u01b0\u1edbc.",true); return; } tryAutoFit(true); };
+document.querySelectorAll('.nb').forEach(b=>b.onclick=()=>nudge(+b.dataset.x,+b.dataset.y));
+
+/* ---- Hi\u1ec7n k\u1ebft qu\u1ea3 trong trang (ch\u1ed1ng sandbox ch\u1eb7n t\u1ea3i) ---- */
+let lastCv=null, lastName="";
+function showResult(cv,name){
+  lastCv=cv; lastName=name;
+  $("#out").src=cv.toDataURL("image/jpeg",0.92);
+  $("#resName").textContent=name;
+  $("#resultPanel").style.display="block";
+  $("#resultPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  status("\u1ea2nh \u0111\u00e3 t\u1ea1o \u2014 nh\u1ea5n gi\u1eef \u1ea3nh trong khung K\u1ebft qu\u1ea3 \u0111\u1ec3 l\u01b0u v\u1ec1 m\u00e1y.",false);
+}
+$("#btnSaveTry").onclick=()=>{ if(lastCv) dl(lastCv,lastName); };
+$("#btnCloseRes").onclick=()=>{ $("#resultPanel").style.display="none"; };
+
+$("#btnPhoto").onclick=()=>{
+  let outW=Math.round(doc.w/MM*DPI), outH=Math.round(doc.h/MM*DPI);
+  if(doc.pxMin){ const long=Math.max(outW,outH); if(long<doc.pxMin){const k=doc.pxMin/long;outW*=k;outH*=k;} }
+  showResult(renderCrop(Math.round(outW),Math.round(outH)), `anh-${doc.id}.jpg`);
+};
+
+/* ---- T\u1edd in gh\u00e9p ---- */
+let sheet={w:6,h:4};
+$("#sheetSize").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return;
+  [...e.currentTarget.children].forEach(x=>x.setAttribute("aria-pressed",x===b));
+  sheet={w:+b.dataset.w,h:+b.dataset.h}; });
+$("#btnSheet").onclick=()=>{
+  const SW=Math.round(sheet.w*DPI), SH=Math.round(sheet.h*DPI);
+  const cv=document.createElement("canvas"); cv.width=SW; cv.height=SH;
+  const c=cv.getContext("2d"); c.fillStyle="#fff"; c.fillRect(0,0,SW,SH);
+  const pw=Math.round(doc.w/MM*DPI), ph=Math.round(doc.h/MM*DPI);
+  const gap=Math.round(3/MM*DPI), pad=Math.round(4/MM*DPI);
+  const cols=Math.max(1,Math.floor((SW-2*pad+gap)/(pw+gap)));
+  const rows=Math.max(1,Math.floor((SH-2*pad+gap)/(ph+gap)));
+  const photo=renderCrop(pw,ph);
+  const totalW=cols*pw+(cols-1)*gap, totalH=rows*ph+(rows-1)*gap;
+  const ox=(SW-totalW)/2, oy=(SH-totalH)/2;
+  c.strokeStyle="#c9c9c9"; c.lineWidth=1;
+  for(let r=0;r<rows;r++)for(let col=0;col<cols;col++){
+    const x=ox+col*(pw+gap), y=oy+r*(ph+gap);
+    c.drawImage(photo,x,y);
+    // v\u1ea1ch c\u1eaft g\u00f3c
+    const m=Math.round(2/MM*DPI);
+    c.beginPath();
+    [[x,y,1,0,1],[x,y,0,1,1]].forEach(()=>{});
+    // 4 g\u00f3c m\u1ea3nh
+    const corner=(cx,cy,dx,dy)=>{c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+dx*m,cy);c.moveTo(cx,cy);c.lineTo(cx,cy+dy*m);c.stroke();};
+    corner(x,y,1,1); corner(x+pw,y,-1,1); corner(x,y+ph,1,-1); corner(x+pw,y+ph,-1,-1);
+  }
+  c.fillStyle="#8a97a6"; c.font=`${Math.round(3.2/MM*DPI)}px monospace`;
+  c.fillText(`${doc.id}  ${doc.w}\u00d7${doc.h}mm  \u00d7${cols*rows}`, pad, SH-Math.round(1.5/MM*DPI));
+  showResult(cv, `to-in-${doc.id}.jpg`);
+};
+
+/* ---- init ---- */
+buildDocs(); layoutFrame(); updateReadout();
+window.addEventListener("resize",()=>{ layoutFrame(); if(img){clampCrop();draw();} });
+</script>
+</body>
+</html>
